@@ -359,6 +359,7 @@ int finalizaInsert(char *nome, column *c, int tamTupla){
 
     tab->esquema = abreTabela(nome, &objeto, &tab->esquema);
     tab2 = procuraAtributoFK(objeto);
+    char tipo_pk = tab2->tipo;
 
     //-----------------------
     char *arquivoIndice = NULL;
@@ -387,15 +388,22 @@ int finalizaInsert(char *nome, column *c, int tamTupla){
         		// verificacao da chave primaria
         		raiz = constroi_bplus(arquivoIndice);
         		if(raiz != NULL) {
-        			encontrou = buscaChaveBtree(raiz, temp->valorCampo); 
+                    if (tipo_pk == 'I') {
+                        char* end;
+                        long val = strtol(temp->valorCampo, &end, 10);
+                        char str_val[20];
+                        sprintf(str_val, "%ld", val);
+                        strcpy(temp->valorCampo, str_val);
+                    }
+                    encontrou = buscaChaveBtree(raiz, temp->valorCampo); 
         			if (encontrou) {
-                //Compara para ver se é not null
-                if (tab2[j].chave == PK || tab2[j].chave == FK) {
-                  if(strcmp(temp->valorCampo, "0") == 0){
-                    printf("ERROR: NULL value in column '%s' violates NOT-NULL constraint.\n", temp->nomeCampo);
-                    return ERRO_NAO_INSERIR_EM_NOT_NULL;
-                  }
-                }
+                        //Compara para ver se é not null
+                        if (tab2[j].chave == PK || tab2[j].chave == FK) {
+                            if(strcmp(temp->valorCampo, "0") == 0){
+                                printf("ERROR: NULL value in column '%s' violates NOT-NULL constraint.\n", temp->nomeCampo);
+                                return ERRO_NAO_INSERIR_EM_NOT_NULL;
+                            }
+                        }
         				printf("ERROR: duplicated key value violates unique constraint \"%s_pkey\"\nDETAIL:  Key (%s)=(%s) already exists.\n",nome,temp->nomeCampo,temp->valorCampo);
         				return ERRO_CHAVE_PRIMARIA;
         			}
