@@ -359,7 +359,6 @@ int finalizaInsert(char *nome, column *c, int tamTupla){
 
     tab->esquema = abreTabela(nome, &objeto, &tab->esquema);
     tab2 = procuraAtributoFK(objeto);
-    char tipo_pk = tab2->tipo;
 
     //-----------------------
     char *arquivoIndice = NULL;
@@ -379,6 +378,15 @@ int finalizaInsert(char *nome, column *c, int tamTupla){
                     return ERRO_INDEX_NULL;
                 }
 
+                // se a PK for integer, converte-se para long e de volta para str e o valor é sobrescrito no temp->valorCampo
+                if (tab2->tipo == 'I') {
+                    char* end;
+                    long val = strtol(temp->valorCampo, &end, 10);
+                    char str_val[20];
+                    sprintf(str_val, "%ld", val);
+                    strcpy(temp->valorCampo, str_val);
+                }
+
                 arquivoIndice = (char *)uffslloc(sizeof(char) *
                   (strlen(connected.db_directory) + strlen(nome) + strlen(tab2[j].nome)));
                 strcpy(arquivoIndice, connected.db_directory); //diretorio
@@ -388,13 +396,6 @@ int finalizaInsert(char *nome, column *c, int tamTupla){
         		// verificacao da chave primaria
         		raiz = constroi_bplus(arquivoIndice);
         		if(raiz != NULL) {
-                    if (tipo_pk == 'I') {
-                        char* end;
-                        long val = strtol(temp->valorCampo, &end, 10);
-                        char str_val[20];
-                        sprintf(str_val, "%ld", val);
-                        strcpy(temp->valorCampo, str_val);
-                    }
                     encontrou = buscaChaveBtree(raiz, temp->valorCampo); 
         			if (encontrou) {
                         //Compara para ver se é not null
