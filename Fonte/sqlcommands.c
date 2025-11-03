@@ -1204,6 +1204,12 @@ void createTable(rc_insert *t) {
   for(i = 0; i < t->N; i++){
     if(t->type[i] == 'S')
   		size = atoi(t->values[i]);
+        //verification negative VARCHAR
+        if (size <= 0) {
+            printf("ERRO: VARCHAR size cannot be negative\n");
+            freeTable(tab);
+            return;
+        }
   	else if(t->type[i] == 'I')
   		size = sizeof(int);
   	else if(t->type[i] == 'D')
